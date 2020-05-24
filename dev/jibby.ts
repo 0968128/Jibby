@@ -1,4 +1,5 @@
 class Jibby {
+    // Fields
     public hygiene:number
     public food:number
     public happyness:number

@@ -1,5 +1,5 @@
 interface Behavior {
-    performBehavior() : void
+    performBehavior():void
     onWash():void
     onEat():void
     onPet():void

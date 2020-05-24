@@ -1,8 +1,8 @@
 /// <reference path="jibby.ts"/>
 
 class Game {
-
-    private jibby : Jibby
+    // Fields
+    private jibby:Jibby
 
     constructor() {
         let container = document.getElementById("container")!
