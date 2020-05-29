@@ -171,15 +171,11 @@ var Dirty = (function () {
 }());
 var Eat = (function () {
     function Eat(jibby) {
-        var _this = this;
         this.jibby = jibby;
-        this.jibby.div.addEventListener("click", function () { return _this.jibby.setBehavior(new Pet(_this.jibby)); });
-        document.getElementsByTagName("foodbutton")[0].addEventListener("click", function () { return _this.jibby.setBehavior(new Eat(_this.jibby)); });
-        document.getElementsByTagName("washbutton")[0].addEventListener("click", function () { return _this.jibby.setBehavior(new Wash(_this.jibby)); });
     }
     Eat.prototype.performBehavior = function () {
         this.jibby.food += 10;
-        this.jibby.div.style.backgroundImage = "url('images/eating.gif')";
+        this.jibby.div.style.backgroundImage = "url('images/washing.png')";
         this.jibby.behavior = new Idle();
     };
     Eat.prototype.getNextBehvior = function () {
