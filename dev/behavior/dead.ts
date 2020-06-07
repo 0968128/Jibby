@@ -1,30 +1,23 @@
-class Dead implements Behavior {
-    private jibby:Jibby
-
+class Dead extends Behavior {
     constructor(jibby:Jibby) {
+        super(jibby)
         this.jibby = jibby
-    }
-
-    performBehavior():void {
-        console.log("Ik ben dood.")
         this.jibby.div.style.backgroundImage = "url('images/dead.png')"
-
-        this.jibby.div.addEventListener("click", () => this.jibby.setBehavior(new Undead(this.jibby)))
     }
 
-    getNextBehvior(): Behavior {
-        throw new Error("Method not implemented.");
+    update():void {
+        console.log("The dead don't need updates. They won't show any sign of life ever again! Or will they?")
     }
 
     onWash(): void {
-        throw new Error("Method not implemented.");
+        console.log("The dead don't need cleaning!")
     }
     
     onEat(): void {
-        throw new Error("Method not implemented.");
+        console.log("The dead don't need food!")
     }
 
     onPet(): void {
-        throw new Error("Method not implemented.");
+        this.jibby.behavior = new Undead(this.jibby)
     }
 }

@@ -1,16 +1,49 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var Game = (function () {
+    function Game() {
+        var container = document.getElementById("container");
+        this.jibby = new Jibby(container);
+        this.gameLoop();
+    }
+    Game.prototype.gameLoop = function () {
+        var _this = this;
+        this.jibby.behavior.update();
+        this.updateUI();
+        requestAnimationFrame(function () { return _this.gameLoop(); });
+    };
+    Game.prototype.updateUI = function () {
+        document.getElementsByTagName("food")[0].innerHTML = Math.round(this.jibby.food).toString();
+        document.getElementsByTagName("happiness")[0].innerHTML = Math.round(this.jibby.happiness).toString();
+        document.getElementsByTagName("hygiene")[0].innerHTML = Math.round(this.jibby.hygiene).toString();
+    };
+    return Game;
+}());
+window.addEventListener("load", function () { new Game(); });
 var Jibby = (function () {
-    function Jibby(parent, behavior) {
+    function Jibby(parent) {
         var _this = this;
         this._div = document.createElement("jibby");
         parent.appendChild(this.div);
         this._x = 0;
         this._y = 220;
         this._hygiene = this._food = this._happiness = 50;
-        this._behavior = behavior;
-        this.div.addEventListener("click", function () { return _this.setBehavior(new Pet(_this)); });
-        document.getElementsByTagName("foodbutton")[0].addEventListener("click", function () { return _this.setBehavior(new Eat(_this)); });
-        document.getElementsByTagName("washbutton")[0].addEventListener("click", function () { return _this.setBehavior(new Wash(_this)); });
+        this._behavior = new Idle(this);
+        this.div.addEventListener("click", function () { return _this._behavior.onPet(); });
+        document.getElementsByTagName("foodbutton")[0].addEventListener("click", function () { return _this._behavior.onEat(); });
+        document.getElementsByTagName("washbutton")[0].addEventListener("click", function () { return _this._behavior.onWash(); });
     }
     Object.defineProperty(Jibby.prototype, "hygiene", {
         get: function () { return this._hygiene; },
@@ -54,310 +87,325 @@ var Jibby = (function () {
         enumerable: true,
         configurable: true
     });
-    Jibby.prototype.update = function () {
-        if (this._food <= 0 || this._happiness <= 0 || this._hygiene <= 0) {
-            this.setBehavior(new Dead(this));
-        }
-        else {
-            if (this._food < 10) {
-                this.setBehavior(new Hungry(this));
-            }
-            if (this._happiness < 10) {
-                this.setBehavior(new Sad(this));
-            }
-            if (this._hygiene < 10) {
-                this.setBehavior(new Dirty(this));
-            }
-        }
-        this._behavior.performBehavior(this);
-    };
-    Jibby.prototype.setBehavior = function (behavior) {
-        this._behavior = behavior;
-    };
     return Jibby;
 }());
-var Game = (function () {
-    function Game() {
-        var container = document.getElementById("container");
-        this.jibby = new Jibby(container, new Idle());
-        this.gameLoop();
-    }
-    Game.prototype.gameLoop = function () {
-        var _this = this;
-        this.jibby.update();
-        this.updateUI();
-        requestAnimationFrame(function () { return _this.gameLoop(); });
-    };
-    Game.prototype.updateUI = function () {
-        document.getElementsByTagName("food")[0].innerHTML = Math.round(this.jibby.food).toString();
-        document.getElementsByTagName("happiness")[0].innerHTML = Math.round(this.jibby.happiness).toString();
-        document.getElementsByTagName("hygiene")[0].innerHTML = Math.round(this.jibby.hygiene).toString();
-    };
-    return Game;
-}());
-window.addEventListener("load", function () { new Game(); });
-var Angry = (function () {
-    function Angry(jibby) {
+var Behavior = (function () {
+    function Behavior(jibby) {
         this.jibby = jibby;
-        this.jibby.food -= 0.04;
-        this.jibby.happiness -= 0.075;
-        this.jibby.hygiene -= 0.01;
+        this.timer = 120;
     }
-    Angry.prototype.performBehavior = function () {
-        this.jibby.div.style.backgroundImage = "url('images/angry.png')";
+    Behavior.prototype.update = function () {
+        this.jibby.food -= 0.02;
+        this.jibby.happiness -= 0.015;
+        this.jibby.hygiene -= 0.01;
+        this.timer--;
+        if (this.timer <= 0) {
+            this.jibby.behavior = new Sleep(this.jibby);
+        }
+        if (this.timer <= 60) {
+            if (this.jibby.food <= 10 && this.jibby.food > 0) {
+                this.jibby.behavior = new Hungry(this.jibby);
+            }
+            else if (this.jibby.happiness <= 10 && this.jibby.happiness > 0) {
+                this.jibby.behavior = new Sad(this.jibby);
+            }
+            else if (this.jibby.hygiene <= 10 && this.jibby.hygiene > 0) {
+                this.jibby.behavior = new Dirty(this.jibby);
+            }
+            else {
+                return;
+            }
+        }
+        if (this.jibby.food <= 0 || this.jibby.happiness <= 0 || this.jibby.hygiene <= 0) {
+            this.jibby.behavior = new Dead(this.jibby);
+        }
     };
-    Angry.prototype.getNextBehvior = function () {
-        return new Undead(this.jibby);
+    Behavior.prototype.onWash = function () {
+        this.jibby.behavior = new Wash(this.jibby);
+    };
+    Behavior.prototype.onEat = function () {
+        this.jibby.behavior = new Eat(this.jibby);
+    };
+    Behavior.prototype.onPet = function () {
+        this.jibby.behavior = new Pet(this.jibby);
+    };
+    return Behavior;
+}());
+var Angry = (function (_super) {
+    __extends(Angry, _super);
+    function Angry(jibby) {
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.happiness -= 12;
+        _this.jibby.div.style.backgroundImage = "url('images/angry.png')";
+        return _this;
+    }
+    Angry.prototype.update = function () {
+        this.timer--;
+        if (this.timer <= 30) {
+            this.jibby.behavior = new Idle(this.jibby);
+        }
     };
     Angry.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Angry.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Angry.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     return Angry;
-}());
-var Dead = (function () {
+}(Behavior));
+var Dead = (function (_super) {
+    __extends(Dead, _super);
     function Dead(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/dead.png')";
+        return _this;
     }
-    Dead.prototype.performBehavior = function () {
-        var _this = this;
-        console.log("Ik ben dood.");
-        this.jibby.div.style.backgroundImage = "url('images/dead.png')";
-        this.jibby.div.addEventListener("click", function () { return _this.jibby.setBehavior(new Undead(_this.jibby)); });
-    };
-    Dead.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
+    Dead.prototype.update = function () {
+        console.log("The dead don't need updates. They won't show any sign of life ever again! Or will they?");
     };
     Dead.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        console.log("The dead don't need cleaning!");
     };
     Dead.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        console.log("The dead don't need food!");
     };
     Dead.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        this.jibby.behavior = new Undead(this.jibby);
     };
     return Dead;
-}());
-var Dirty = (function () {
+}(Behavior));
+var Dirty = (function (_super) {
+    __extends(Dirty, _super);
     function Dirty(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/dirty.png')";
+        return _this;
     }
-    Dirty.prototype.performBehavior = function () {
-        console.log("Ik ben vies.");
-        this.jibby.div.style.backgroundImage = "url('images/dirty.png')";
+    Dirty.prototype.update = function () {
         this.jibby.food -= 0.02;
         this.jibby.happiness -= 0.015;
         this.jibby.hygiene -= 0.01;
-    };
-    Dirty.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
-    };
-    Dirty.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
-    };
-    Dirty.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
-    };
-    Dirty.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        this.timer--;
+        if (this.timer <= 60) {
+            if (this.jibby.food <= 10 && this.jibby.food > 0) {
+                this.jibby.behavior = new Hungry(this.jibby);
+            }
+            else if (this.jibby.happiness <= 10 && this.jibby.happiness > 0) {
+                this.jibby.behavior = new Sad(this.jibby);
+            }
+            else {
+                this.jibby.behavior = new Idle(this.jibby);
+            }
+        }
+        if (this.jibby.food <= 0 || this.jibby.happiness <= 0 || this.jibby.hygiene <= 0) {
+            this.jibby.behavior = new Dead(this.jibby);
+        }
     };
     return Dirty;
-}());
-var Eat = (function () {
+}(Behavior));
+var Eat = (function (_super) {
+    __extends(Eat, _super);
     function Eat(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.food += 8;
+        _this.jibby.div.style.backgroundImage = "url('images/eating.gif')";
+        return _this;
     }
-    Eat.prototype.performBehavior = function () {
-        this.jibby.food += 10;
-        this.jibby.div.style.backgroundImage = "url('images/washing.png')";
-        this.jibby.behavior = new Idle();
-    };
-    Eat.prototype.getNextBehvior = function () {
-        return new Idle();
+    Eat.prototype.update = function () {
+        this.timer--;
+        if (this.timer <= 0) {
+            this.jibby.behavior = new Idle(this.jibby);
+        }
     };
     Eat.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        this.jibby.behavior = new Angry(this.jibby);
     };
     Eat.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Eat.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     return Eat;
-}());
-var Hungry = (function () {
+}(Behavior));
+var Hungry = (function (_super) {
+    __extends(Hungry, _super);
     function Hungry(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/hungry.png')";
+        return _this;
     }
-    Hungry.prototype.performBehavior = function () {
-        console.log("Ik ben hongerig.");
-        this.jibby.div.style.backgroundImage = "url('images/hungry.png')";
+    Hungry.prototype.update = function () {
         this.jibby.food -= 0.02;
         this.jibby.happiness -= 0.015;
         this.jibby.hygiene -= 0.01;
-    };
-    Hungry.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
-    };
-    Hungry.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
-    };
-    Hungry.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
-    };
-    Hungry.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        this.timer--;
+        if (this.timer <= 60) {
+            if (this.jibby.happiness <= 10 && this.jibby.happiness > 0) {
+                this.jibby.behavior = new Sad(this.jibby);
+            }
+            else if (this.jibby.hygiene <= 10 && this.jibby.hygiene > 0) {
+                this.jibby.behavior = new Dirty(this.jibby);
+            }
+            else {
+                this.jibby.behavior = new Idle(this.jibby);
+            }
+        }
+        if (this.jibby.food <= 0 || this.jibby.happiness <= 0 || this.jibby.hygiene <= 0) {
+            this.jibby.behavior = new Dead(this.jibby);
+        }
     };
     return Hungry;
-}());
-var Idle = (function () {
-    function Idle() {
+}(Behavior));
+var Idle = (function (_super) {
+    __extends(Idle, _super);
+    function Idle(jibby) {
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/idle.png')";
+        return _this;
     }
-    Idle.prototype.performBehavior = function (jibby) {
-        console.log("Ik ben inactief.");
-        jibby.div.style.backgroundImage = "url('images/idle.png')";
-        jibby.food -= 0.02;
-        jibby.happiness -= 0.015;
-        jibby.hygiene -= 0.01;
-    };
-    Idle.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
-    };
-    Idle.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
-    };
-    Idle.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
-    };
-    Idle.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
-    };
     return Idle;
-}());
-var Pet = (function () {
+}(Behavior));
+var Pet = (function (_super) {
+    __extends(Pet, _super);
     function Pet(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.happiness += 6;
+        _this.jibby.div.style.backgroundImage = "url('images/happy.png')";
+        return _this;
     }
-    Pet.prototype.performBehavior = function () {
-        this.jibby.div.style.backgroundImage = "url('images/happy.png')";
-        this.jibby.happiness += 10;
-        this.jibby.behavior = new Idle();
-    };
-    Pet.prototype.getNextBehvior = function () {
-        return new Idle();
+    Pet.prototype.update = function () {
+        this.timer--;
+        if (this.timer <= 0) {
+            this.jibby.behavior = new Idle(this.jibby);
+        }
     };
     Pet.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Pet.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Pet.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     return Pet;
-}());
-var Sad = (function () {
+}(Behavior));
+var Sad = (function (_super) {
+    __extends(Sad, _super);
     function Sad(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/sad.png')";
+        return _this;
     }
-    Sad.prototype.performBehavior = function () {
-        console.log("Ik ben ongelukkig.");
-        this.jibby.div.style.backgroundImage = "url('images/sad.png')";
+    Sad.prototype.update = function () {
         this.jibby.food -= 0.02;
         this.jibby.happiness -= 0.015;
         this.jibby.hygiene -= 0.01;
-    };
-    Sad.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
-    };
-    Sad.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
-    };
-    Sad.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
-    };
-    Sad.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        this.timer--;
+        if (this.timer <= 60) {
+            if (this.jibby.hygiene <= 10 && this.jibby.hygiene > 0) {
+                this.jibby.behavior = new Dirty(this.jibby);
+            }
+            else if (this.jibby.food <= 10 && this.jibby.food > 0) {
+                this.jibby.behavior = new Hungry(this.jibby);
+            }
+            else {
+                this.jibby.behavior = new Idle(this.jibby);
+            }
+        }
+        if (this.jibby.food <= 0 || this.jibby.happiness <= 0 || this.jibby.hygiene <= 0) {
+            this.jibby.behavior = new Dead(this.jibby);
+        }
     };
     return Sad;
-}());
-var Sleep = (function () {
+}(Behavior));
+var Sleep = (function (_super) {
+    __extends(Sleep, _super);
     function Sleep(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/sleeping.png')";
+        return _this;
     }
-    Sleep.prototype.performBehavior = function () {
-        console.log("Ik ben aan het slapen.");
-        this.jibby.div.style.backgroundImage = "url('images/sleeping.png')";
+    Sleep.prototype.update = function () {
         this.jibby.food -= 0.01;
         this.jibby.happiness -= 0.0075;
         this.jibby.hygiene -= 0.005;
-    };
-    Sleep.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
+        this.timer--;
+        if (this.timer <= 0) {
+            this.jibby.behavior = new Idle(this.jibby);
+        }
     };
     Sleep.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        this.jibby.behavior = new Angry(this.jibby);
     };
     Sleep.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Sleep.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     return Sleep;
-}());
-var Undead = (function () {
+}(Behavior));
+var Undead = (function (_super) {
+    __extends(Undead, _super);
     function Undead(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.div.style.backgroundImage = "url('images/zombie.png')";
+        return _this;
     }
-    Undead.prototype.performBehavior = function () {
-        console.log("Ik ben ondood.");
-        this.jibby.div.style.backgroundImage = "url('images/zombie.png')";
-    };
-    Undead.prototype.getNextBehvior = function () {
-        throw new Error("Method not implemented.");
+    Undead.prototype.update = function () {
+        console.log("Zombies don't need updates. They're timeless!");
     };
     Undead.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        console.log("Zombies don't need cleaning!");
     };
     Undead.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        console.log("Zombies don't need food!");
     };
     Undead.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        console.log("Zombies don't need petting!");
     };
     return Undead;
-}());
-var Wash = (function () {
+}(Behavior));
+var Wash = (function (_super) {
+    __extends(Wash, _super);
     function Wash(jibby) {
-        this.jibby = jibby;
+        var _this = _super.call(this, jibby) || this;
+        _this.jibby = jibby;
+        _this.jibby.hygiene += 6;
+        _this.jibby.happiness += 2;
+        _this.jibby.div.style.backgroundImage = "url('images/washing.png')";
+        return _this;
     }
-    Wash.prototype.performBehavior = function () {
-        this.jibby.hygiene += 10;
-        this.jibby.happiness += 2;
-        this.jibby.div.style.backgroundImage = "url('images/washing.png')";
-        this.jibby.behavior = new Idle();
-    };
-    Wash.prototype.getNextBehvior = function () {
-        return new Idle();
+    Wash.prototype.update = function () {
+        this.timer--;
+        if (this.timer <= 0) {
+            this.jibby.behavior = new Idle(this.jibby);
+        }
     };
     Wash.prototype.onWash = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Wash.prototype.onEat = function () {
-        throw new Error("Method not implemented.");
+        return;
     };
     Wash.prototype.onPet = function () {
-        throw new Error("Method not implemented.");
+        this.jibby.behavior = new Angry(this.jibby);
     };
     return Wash;
-}());
+}(Behavior));
 //# sourceMappingURL=main.js.map

@@ -1,30 +1,27 @@
-class Pet implements Behavior {
-    private jibby:Jibby
-
+class Pet extends Behavior {
     constructor(jibby:Jibby) {
+        super(jibby)
         this.jibby = jibby
-    }
-
-    performBehavior(): void {
+        this.jibby.happiness += 6
         this.jibby.div.style.backgroundImage = "url('images/happy.png')"
-        this.jibby.happiness += 10
-        // Wacht 2 seconde
-        this.jibby.behavior = new Idle()
     }
 
-    getNextBehvior(): Behavior {
-        return new Idle()
+    update():void {
+        this.timer--
+        if(this.timer <= 0) {
+            this.jibby.behavior = new Idle(this.jibby)
+        }
     }
 
     onWash(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 
     onEat(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 
     onPet(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 }

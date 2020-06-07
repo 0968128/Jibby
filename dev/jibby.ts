@@ -24,7 +24,7 @@ class Jibby {
     public get behavior(): Behavior { return this._behavior }
     public set behavior(value: Behavior) { this._behavior = value }
             
-    constructor(parent:HTMLElement, behavior:Behavior) {
+    constructor(parent:HTMLElement) {
         // Jibby in html zetten
         this._div = document.createElement("jibby")
         parent.appendChild(this.div)
@@ -35,35 +35,11 @@ class Jibby {
         this._hygiene = this._food = this._happiness = 50
 
         // Behavior field gelijkstellen aan Idle, want daar begint hij altijd mee
-        this._behavior = behavior
+        this._behavior = new Idle(this)
 
         // Clicklisteners
-        this.div.addEventListener("click", () => this.setBehavior(new Pet(this)))
-        document.getElementsByTagName("foodbutton")[0].addEventListener("click", () => this.setBehavior(new Eat(this)))
-        document.getElementsByTagName("washbutton")[0].addEventListener("click", () => this.setBehavior(new Wash(this)))
-    }
-
-    public update():void {
-        // Check of stats te laag komen
-        if(this._food <= 0 || this._happiness <= 0 || this._hygiene <= 0) {
-            // Jibby sterft als één van de stats nul of lager is/wordt
-            this.setBehavior(new Dead(this))
-        } else {
-            // Jibby wordt hongerig, ongelukkig of vies als respectievelijk de voeding-, welzijn- en hygiënestat onder de 10 komt.
-            if(this._food < 10) {
-                this.setBehavior(new Hungry(this))
-            }
-            if(this._happiness < 10) {
-                this.setBehavior(new Sad(this))
-            }
-            if(this._hygiene < 10) {
-                this.setBehavior(new Dirty(this))
-            }
-        }
-        this._behavior.performBehavior(this)
-    }
-
-    public setBehavior(behavior:Behavior) {
-        this._behavior = behavior
+        this.div.addEventListener("click", () => this._behavior.onPet())
+        document.getElementsByTagName("foodbutton")[0].addEventListener("click", () => this._behavior.onEat())
+        document.getElementsByTagName("washbutton")[0].addEventListener("click", () => this._behavior.onWash())
     }
 }

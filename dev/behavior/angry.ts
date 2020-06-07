@@ -1,32 +1,29 @@
-class Angry implements Behavior {
-    private jibby:Jibby
+/// <reference path="behavior.ts"/>
 
+class Angry extends Behavior {
     constructor(jibby:Jibby) {
+        super(jibby)
         this.jibby = jibby
-
-        // Stats laten dalen
-        this.jibby.food -= 0.04
-        this.jibby.happiness -= 0.075
-        this.jibby.hygiene -= 0.01
-    }
-
-    performBehavior(): void {
+        this.jibby.happiness -= 12
         this.jibby.div.style.backgroundImage = "url('images/angry.png')"
     }
 
-    getNextBehvior(): Behavior {
-        return new Undead(this.jibby)
+    update():void {
+        this.timer--
+        if(this.timer <= 30) {
+            this.jibby.behavior = new Idle(this.jibby)
+        }
     }
 
     onWash(): void {
-        throw new Error("Method not implemented.");
+        return
     }
     
     onEat(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 
     onPet(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 }

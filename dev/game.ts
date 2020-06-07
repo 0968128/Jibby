@@ -1,17 +1,15 @@
-/// <reference path="jibby.ts"/>
-
 class Game {
     // Fields
     private jibby:Jibby
 
     constructor() {
         let container = document.getElementById("container")!
-        this.jibby = new Jibby(container, new Idle())
+        this.jibby = new Jibby(container)
         this.gameLoop()
     }
 
     private gameLoop(){
-        this.jibby.update()
+        this.jibby.behavior.update()
         this.updateUI()
         requestAnimationFrame(() => this.gameLoop())
     }

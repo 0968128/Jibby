@@ -1,33 +1,29 @@
-class Sleep implements Behavior {
-    private jibby:Jibby
-
+class Sleep extends Behavior {
     constructor(jibby:Jibby) {
+        super(jibby)
         this.jibby = jibby
+        this.jibby.div.style.backgroundImage = "url('images/sleeping.png')"
     }
 
-    performBehavior():void {
-        console.log("Ik ben aan het slapen.")
-        this.jibby.div.style.backgroundImage = "url('images/sleeping.png')"
-
-        // Stats laten dalen
+    update():void {
         this.jibby.food -= 0.01
         this.jibby.happiness -= 0.0075
         this.jibby.hygiene -= 0.005
-    }
-
-    getNextBehvior(): Behavior {
-        throw new Error("Method not implemented.");
+        this.timer--
+        if(this.timer <= 0) {
+            this.jibby.behavior = new Idle(this.jibby)
+        }
     }
 
     onWash(): void {
-        throw new Error("Method not implemented.");
+        this.jibby.behavior = new Angry(this.jibby)
     }
 
     onEat(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 
     onPet(): void {
-        throw new Error("Method not implemented.");
+        return
     }
 }
