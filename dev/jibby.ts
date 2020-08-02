@@ -37,7 +37,7 @@ class Jibby {
         // Behavior field gelijkstellen aan Idle, want daar begint hij altijd mee
         this._behavior = new Idle(this)
 
-        // Clicklisteners
+        // Geef de verantwoordelijkheid van wat te doen bij een klik op een knop aan het huidige gedrag
         this.div.addEventListener("click", () => this._behavior.onPet())
         document.getElementsByTagName("foodbutton")[0].addEventListener("click", () => this._behavior.onEat())
         document.getElementsByTagName("washbutton")[0].addEventListener("click", () => this._behavior.onWash())
