@@ -22,7 +22,7 @@ abstract class Behavior {
             this.jibby.behavior = new Sleep(this.jibby)
         }
 
-        // Jibby wordt hongerig, ongelukkig of vies als zijn stats te laag zijn
+        // Jibby wisselt tussen gedrag 'hongerig', 'ongelukkig' of 'vies' als desbetreffende stats te laag zijn
         if(this.timer <= 60) {
             if(this.jibby.food <= 10 && this.jibby.food > 0) {
                 this.jibby.behavior = new Hungry(this.jibby)
