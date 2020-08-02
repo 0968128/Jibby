@@ -1,12 +1,15 @@
 abstract class Behavior {
+    // Fields
     protected jibby:Jibby
     protected timer:number
     
+    // Standaard method implementaties
     constructor(jibby:Jibby) {
         this.jibby = jibby
         this.timer = 120
     }
 
+    // Updatemethod
     public update():void {
         // Stats en timer laten aftellen
         this.jibby.food -= 0.02
@@ -38,7 +41,7 @@ abstract class Behavior {
         }
     }
 
-    // Standaardimplementatie hookmethods
+    // Hookmethods van Jibby's gedrag om het volgende gedrag aan te sturen
     // Childclasses hebben keuze om te overschrijven met hun eigen implementatie
     public onWash():void {
         this.jibby.behavior = new Wash(this.jibby)
